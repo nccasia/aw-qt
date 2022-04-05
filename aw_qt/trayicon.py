@@ -29,7 +29,7 @@ def get_env() -> Dict[str, str]:
     """
     Necessary for xdg-open to work properly when PyInstaller overrides LD_LIBRARY_PATH
 
-    https://github.com/ActivityWatch/activitywatch/issues/208#issuecomment-417346407
+    https://github.com/KomuTracker/komutracker/issues/208#issuecomment-417346407
     """
     env = dict(os.environ)  # make a copy of the environment
     lp_key = "LD_LIBRARY_PATH"  # for GNU/Linux and *BSD.
@@ -82,7 +82,7 @@ class TrayIcon(QSystemTrayIcon):
     ) -> None:
         QSystemTrayIcon.__init__(self, icon, parent)
         self._parent = parent  # QSystemTrayIcon also tries to save parent info but it screws up the type info
-        self.setToolTip("ActivityWatch" + (" (testing)" if testing else ""))
+        self.setToolTip("KomuTracker" + (" (testing)" if testing else ""))
 
         self.manager = manager
         self.testing = testing
@@ -121,13 +121,13 @@ class TrayIcon(QSystemTrayIcon):
         exitIcon = QIcon.fromTheme(
             "application-exit", QIcon("media/application_exit.png")
         )
-        # This check is an attempted solution to: https://github.com/ActivityWatch/activitywatch/issues/62
+        # This check is an attempted solution to: https://github.com/KomuTracker/komutracker/issues/62
         # Seems to be in agreement with: https://github.com/OtterBrowser/otter-browser/issues/1313
         #   "it seems that the bug is also triggered when creating a QIcon with an invalid path"
         if exitIcon.availableSizes():
-            menu.addAction(exitIcon, "Quit ActivityWatch", lambda: exit(self.manager))
+            menu.addAction(exitIcon, "Quit KomuTracker", lambda: exit(self.manager))
         else:
-            menu.addAction("Quit ActivityWatch", lambda: exit(self.manager))
+            menu.addAction("Quit KomuTracker", lambda: exit(self.manager))
 
         self.setContextMenu(menu)
 
@@ -225,7 +225,7 @@ def run(manager: Manager, testing: bool = False) -> Any:
         QMessageBox.critical(
             None,
             "Systray",
-            "I couldn't detect any system tray on this system. Either get one or run the ActivityWatch modules from the console.",
+            "I couldn't detect any system tray on this system. Either get one or run the KomuTracker modules from the console.",
         )
         sys.exit(1)
 

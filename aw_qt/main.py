@@ -14,7 +14,7 @@ from .config import AwQtSettings
 logger = logging.getLogger(__name__)
 
 
-@click.command("aw-qt", help="A trayicon and service manager for ActivityWatch")
+@click.command("aw-qt", help="A trayicon and service manager for KomuTracker")
 @click.option(
     "--testing", is_flag=True, help="Run the trayicon and services in testing mode"
 )

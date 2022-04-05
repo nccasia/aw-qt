@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=ActivityWatch
+Name=KomuTracker
 GenericName=Time-tracking application
 Comment=Open source time-tracking application with a focus on extensibility and privacy.
 Exec=aw-qt
@@ -9,6 +9,6 @@ Terminal=false
 Type=Application
 X-GNOME-Autostart-enabled=true
 Version=1.0
-Icon=activitywatch
+Icon=komutracker
 Categories=Utility;
 

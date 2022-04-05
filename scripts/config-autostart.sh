@@ -14,8 +14,8 @@ if [[ $(uname) == "Linux" ]]; then
     echo "Installing .desktop file to $AUTOSTART_PATH"
 
     cp $ROOT_DIR/resources/aw-qt.desktop $AUTOSTART_PATH
-    xdg-icon-resource install --novendor --size 32 $ROOT_DIR/media/logo/logo.png activitywatch
-    xdg-icon-resource install --novendor --size 512 $ROOT_DIR/media/logo/logo.png activitywatch
+    xdg-icon-resource install --novendor --size 32 $ROOT_DIR/media/logo/logo.png komutracker
+    xdg-icon-resource install --novendor --size 512 $ROOT_DIR/media/logo/logo.png komutracker
 else
     echo "Platform not supported in script, exiting"
 fi

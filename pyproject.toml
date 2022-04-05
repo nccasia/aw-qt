@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "aw-qt"
 version = "0.1.0"
-description = "Trayicon for ActivityWatch"
+description = "Trayicon for KomuTracker"
 authors = ["Erik Bjäreholt <erik@bjareho.lt>"]
 license = "MPL-2.0"
 include = ["aw_qt/resources.py"]  # resources.py is in .gitignore and generated before build

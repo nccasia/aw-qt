@@ -36,7 +36,7 @@ a = Analysis(['aw_qt/__main__.py'],
              win_private_assemblies=False,
              cipher=block_cipher)
 
-# Needed to be removed due to https://github.com/ActivityWatch/activitywatch/issues/607#issuecomment-862187836
+# Needed to be removed due to https://github.com/KomuTracker/komutracker/issues/607#issuecomment-862187836
 exclude_libs = ["libfontconfig", "libfreetype"]
 a.binaries = [bin for bin in a.binaries if not any(bin[0].find(lib) >= 0 for lib in exclude_libs)]
 
@@ -67,5 +67,5 @@ coll = COLLECT(exe,
 # NOTE: Untested, remove the False to test
 if False and platform.system() == "Darwin":
     app = BUNDLE(exe,
-                 name="ActivityWatch.app",
+                 name="KomuTracker.app",
                  icon=None)  # TODO: Should this be icon=icon?

@@ -1,6 +1,6 @@
 # aw-qt
 
-[![GitHub Actions badge](https://github.com/ActivityWatch/aw-qt/workflows/Build/badge.svg)](https://github.com/ActivityWatch/aw-qt/actions)
+[![GitHub Actions badge](https://github.com/KomuTracker/aw-qt/workflows/Build/badge.svg)](https://github.com/KomuTracker/aw-qt/actions)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Typechecking: Mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 
