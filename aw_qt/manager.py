@@ -271,14 +271,14 @@ class Manager:
         autostart_modules = list(set(autostart_modules))
 
         # Start aw-server-rust first
-        if "aw-server-rust" in autostart_modules:
-            self.start("aw-server-rust")
-        elif "aw-server" in autostart_modules:
-            self.start("aw-server")
+        #if "aw-server-rust" in autostart_modules:
+        #    self.start("aw-server-rust")
+        #elif "aw-server" in autostart_modules:
+        #    self.start("aw-server")
 
-        autostart_modules = list(
-            set(autostart_modules) - {"aw-server", "aw-server-rust"}
-        )
+        #autostart_modules = list(
+        #    set(autostart_modules) - {"aw-server", "aw-server-rust"}
+        #)
         for name in autostart_modules:
             self.start(name)
 

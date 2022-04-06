@@ -87,7 +87,7 @@ class TrayIcon(QSystemTrayIcon):
         self.manager = manager
         self.testing = testing
 
-        self.root_url = "http://tracker.komu.vn:{port}".format(port=5666 if self.testing else 5600)
+        self.root_url = "http://tracker.komu.vn:{port}".format(port=5666 if self.testing else 80)
         self.activated.connect(self.on_activated)
 
         self._build_rootmenu()
@@ -107,10 +107,10 @@ class TrayIcon(QSystemTrayIcon):
         #menu.addAction("Open Dashboard", lambda: open_webui(self.root_url))
         #menu.addAction("Open API Browser", lambda: open_apibrowser(self.root_url))
 
-        #menu.addSeparator()
+        menu.addSeparator()
 
-        #modulesMenu = menu.addMenu("Modules")
-        #self._build_modulemenu(modulesMenu)
+        modulesMenu = menu.addMenu("Modules")
+        self._build_modulemenu(modulesMenu)
 
         #menu.addSeparator()
         menu.addAction(
