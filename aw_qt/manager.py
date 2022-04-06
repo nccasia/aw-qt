@@ -143,7 +143,7 @@ class Module:
         # logger.debug("Running: {}".format(exec_cmd))
 
         # Don't display a console window on Windows
-        # See: https://github.com/KomuTracker/komutracker/issues/212
+        # See: https://github.com/nccasia/komutracker/issues/212
         startupinfo = None
         if sys.platform == "win32" or sys.platform == "cygwin":
             startupinfo = subprocess.STARTUPINFO()
@@ -155,7 +155,7 @@ class Module:
             AppKit.NSBundle.mainBundle().infoDictionary()["LSBackgroundOnly"] = "1"
 
         # There is a very good reason stdout and stderr is not PIPE here
-        # See: https://github.com/KomuTracker/aw-server/issues/27
+        # See: https://github.com/nccasia/aw-server/issues/27
         self._process = subprocess.Popen(
             exec_cmd, universal_newlines=True, startupinfo=startupinfo
         )

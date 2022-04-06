@@ -29,7 +29,7 @@ def get_env() -> Dict[str, str]:
     """
     Necessary for xdg-open to work properly when PyInstaller overrides LD_LIBRARY_PATH
 
-    https://github.com/KomuTracker/komutracker/issues/208#issuecomment-417346407
+    https://github.com/nccasia/komutracker/issues/208#issuecomment-417346407
     """
     env = dict(os.environ)  # make a copy of the environment
     lp_key = "LD_LIBRARY_PATH"  # for GNU/Linux and *BSD.
@@ -87,7 +87,7 @@ class TrayIcon(QSystemTrayIcon):
         self.manager = manager
         self.testing = testing
 
-        self.root_url = "http://localhost:{port}".format(port=5666 if self.testing else 5600)
+        self.root_url = "http://tracker.komu.vn:{port}".format(port=5666 if self.testing else 5600)
         self.activated.connect(self.on_activated)
 
         self._build_rootmenu()
@@ -104,15 +104,15 @@ class TrayIcon(QSystemTrayIcon):
             menu.addSeparator()
 
         # openWebUIIcon = QIcon.fromTheme("open")
-        menu.addAction("Open Dashboard", lambda: open_webui(self.root_url))
-        menu.addAction("Open API Browser", lambda: open_apibrowser(self.root_url))
+        #menu.addAction("Open Dashboard", lambda: open_webui(self.root_url))
+        #menu.addAction("Open API Browser", lambda: open_apibrowser(self.root_url))
 
-        menu.addSeparator()
+        #menu.addSeparator()
 
-        modulesMenu = menu.addMenu("Modules")
-        self._build_modulemenu(modulesMenu)
+        #modulesMenu = menu.addMenu("Modules")
+        #self._build_modulemenu(modulesMenu)
 
-        menu.addSeparator()
+        #menu.addSeparator()
         menu.addAction(
             "Open log folder", lambda: open_dir(aw_core.dirs.get_log_dir(None))
         )
@@ -121,7 +121,7 @@ class TrayIcon(QSystemTrayIcon):
         exitIcon = QIcon.fromTheme(
             "application-exit", QIcon("media/application_exit.png")
         )
-        # This check is an attempted solution to: https://github.com/KomuTracker/komutracker/issues/62
+        # This check is an attempted solution to: https://github.com/nccasia/komutracker/issues/62
         # Seems to be in agreement with: https://github.com/OtterBrowser/otter-browser/issues/1313
         #   "it seems that the bug is also triggered when creating a QIcon with an invalid path"
         if exitIcon.availableSizes():
