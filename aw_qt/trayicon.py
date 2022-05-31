@@ -1,3 +1,4 @@
+import socket
 import sys
 import logging
 import signal
@@ -19,6 +20,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon
 
 import aw_core
+from aw_client import ActivityWatchClient
 
 from .manager import Manager, Module
 
@@ -118,6 +120,18 @@ class TrayIcon(QSystemTrayIcon):
         )
         menu.addSeparator()
 
+        # Auth
+        awc = ActivityWatchClient()
+        if awc.user_name:
+            menu.addAction(
+                f"{awc.user_name}"
+            )
+        else:
+            menu.addAction(
+                "Login", lambda: login()
+            )
+        menu.addSeparator()
+
         exitIcon = QIcon.fromTheme(
             "application-exit", QIcon("media/application_exit.png")
         )
@@ -148,12 +162,13 @@ class TrayIcon(QSystemTrayIcon):
             for action in modulesMenu.actions():
                 if action.isEnabled():
                     module: Module = action.data()
-                    alive = module.is_alive()
-                    action.setChecked(alive)
+                    if awc.user_name:
+                        alive = module.is_alive()
+                        action.setChecked(alive)
+                    else:
+                        module.stop()
+                        action.setChecked(False)
                     # print(module.text(), alive)
-
-            # TODO: Do it in a better way, singleShot isn't pretty...
-            QtCore.QTimer.singleShot(2000, rebuild_modules_menu)
 
         QtCore.QTimer.singleShot(2000, rebuild_modules_menu)
 
@@ -168,6 +183,33 @@ class TrayIcon(QSystemTrayIcon):
             QtCore.QTimer.singleShot(2000, rebuild_modules_menu)
 
         QtCore.QTimer.singleShot(2000, check_module_status)
+
+        def auth_check() -> None:
+            user = awc.auth()
+            if user is not None and user != {}:
+                awc.user_name = user['name']
+                awc.user_email = user['email']
+                for action in menu.actions():
+                    if action.text() == "Login":
+                        action.setText(awc.user_name)
+
+                QtCore.QTimer.singleShot(60000, auth_check)
+            else:
+                if awc.user_name:
+                    for action in modulesMenu.actions():
+                        if action.isEnabled():
+                            module: Module = action.data()
+                            module.stop()
+                    QMessageBox.critical(
+                        None,
+                        "Auth",
+                        "Your account has been logged into another computer!",
+                    )
+                    sys.exit(1)
+                else:
+                    QtCore.QTimer.singleShot(10000, auth_check)
+
+        QtCore.QTimer.singleShot(10000, auth_check)
 
     def _build_modulemenu(self, moduleMenu: QMenu) -> None:
         moduleMenu.clear()
@@ -245,3 +287,9 @@ def run(manager: Manager, testing: bool = False) -> Any:
     logger.info("Initialized aw-qt and trayicon succesfully")
     # Run the application, blocks until quit
     return app.exec_()
+
+def login() -> Any:
+    authUrl = "https://identity.nccsoft.vn/auth/realms/NCC/protocol/openid-connect/auth"
+    clientId = "komutracker"
+    state = f"{socket.gethostname()}"
+    open_url(f"{authUrl}?client_id={clientId}&response_type=code&state={state}")
