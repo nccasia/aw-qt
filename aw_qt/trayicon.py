@@ -21,6 +21,7 @@ from PyQt5.QtGui import QIcon
 
 import aw_core
 from aw_client import ActivityWatchClient
+from aw_qt.localToken import LocalToken
 
 from .manager import Manager, Module
 
@@ -210,6 +211,24 @@ class TrayIcon(QSystemTrayIcon):
                     QtCore.QTimer.singleShot(10000, auth_check)
 
         QtCore.QTimer.singleShot(10000, auth_check)
+
+        def check_auth_device() -> None:
+            localToken = LocalToken()
+            if localToken.token == "":
+                token = awc.check_auth_device()
+                if token is not None or token == "":
+                    localToken.set(token)
+                    isValidToken = awc.check_valid_token(token)
+                    if isValidToken:
+                        return
+            else:
+                isValidToken = awc.check_valid_token(localToken.token)
+                if isValidToken:
+                    return
+                else:
+                    localToken.delete()
+            QtCore.QTimer.singleShot(10000, check_auth_device)
+        check_auth_device()
 
     def _build_modulemenu(self, moduleMenu: QMenu) -> None:
         moduleMenu.clear()
