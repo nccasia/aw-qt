@@ -178,10 +178,9 @@ class TrayIcon(QSystemTrayIcon):
 
         def auth_check() -> None:
             logger.info("begin auth check")
-            localToken = LocalToken()
             awc = ActivityWatchClient()
-            if localToken.token is not None and localToken != "":
-                logger.info(f"local token found: {localToken.token}")
+            if awc.localToken.get() is not None and awc.localToken.get() != "":
+                logger.info(f"local token found: {awc.localToken.get()}")
                 if awc.is_authenticated:
                     logger.info(f"user: {awc.user_name} - {awc.user_email}")
                     for action in menu.actions():
@@ -190,25 +189,17 @@ class TrayIcon(QSystemTrayIcon):
                     logger.info(f"register auth check in next 60s")
                     QtCore.QTimer.singleShot(60000, auth_check)
                 else:
+                    awc.localToken.delete()
                     QMessageBox.critical(
                         None,
                         "Komutracker",
-                        "Your account has been logged into another computer!",
+                        "Please re-lauch the application and login again!",
                     )
-                    # TODO Logout
-                    localToken.delete()
                     sys.exit(1)
             else:
                 logger.info(f"No local token found, getting token from server ...")
-                token = awc.get_device_token()
-                if token is not None:
-                    logger.info(f"get token success: {token}")
-                    localToken.set(token)
-                    logger.info(f"register auth check in next 2s")
-                    QtCore.QTimer.singleShot(2000, auth_check)
-                else:
-                    logger.info(f"register auth check in next 10s")
-                    QtCore.QTimer.singleShot(10000, auth_check)
+                awc.get_device_token()
+                QtCore.QTimer.singleShot(5000, auth_check)
                 
         auth_check()
     
