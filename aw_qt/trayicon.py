@@ -21,7 +21,7 @@ from PyQt5.QtGui import QIcon
 
 import aw_core
 from aw_client import ActivityWatchClient
-from aw_qt.localToken import LocalToken
+from aw_client.localToken import LocalToken
 
 from .manager import Manager, Module
 
@@ -177,36 +177,41 @@ class TrayIcon(QSystemTrayIcon):
         QtCore.QTimer.singleShot(2000, check_module_status)
 
         def auth_check() -> None:
+            logger.info("begin auth check")
             localToken = LocalToken()
-            awc = ActivityWatchClient(token=localToken.token)
-            if localToken.token != "":
-                user = awc.auth()
-                if user is not None and user != {}:
+            awc = ActivityWatchClient()
+            if localToken.token is not None and localToken != "":
+                logger.info(f"local token found: {localToken.token}")
+                if awc.is_authenticated:
+                    logger.info(f"user: {awc.user_name} - {awc.user_email}")
                     for action in menu.actions():
                         if action.text() == "Login":
                             action.setText(awc.user_name)
-
+                    logger.info(f"register auth check in next 60s")
                     QtCore.QTimer.singleShot(60000, auth_check)
                 else:
-                    for action in modulesMenu.actions():
-                        if action.isEnabled():
-                            module: Module = action.data()
-                            module.stop()
                     QMessageBox.critical(
                         None,
-                        "Auth",
+                        "Komutracker",
                         "Your account has been logged into another computer!",
                     )
                     # TODO Logout
-                    LocalToken.delete()
+                    localToken.delete()
                     sys.exit(1)
             else:
+                logger.info(f"No local token found, getting token from server ...")
                 token = awc.get_device_token()
                 if token is not None:
+                    logger.info(f"get token success: {token}")
                     localToken.set(token)
-                    user = awc.auth()
-        QtCore.QTimer.singleShot(10000, auth_check)
-
+                    logger.info(f"register auth check in next 2s")
+                    QtCore.QTimer.singleShot(2000, auth_check)
+                else:
+                    logger.info(f"register auth check in next 10s")
+                    QtCore.QTimer.singleShot(10000, auth_check)
+                
+        auth_check()
+    
     def _build_modulemenu(self, moduleMenu: QMenu) -> None:
         moduleMenu.clear()
 
