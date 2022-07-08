@@ -186,6 +186,13 @@ class TrayIcon(QSystemTrayIcon):
                     for action in menu.actions():
                         if action.text() == "Login":
                             action.setText(awc.user_name)
+                            
+                    for action in modulesMenu.actions():
+                        if not action.isChecked():
+                            module: Module = action.data()
+                            if module is not None:
+                                module.start(testing=self.testing)
+                                action.setChecked(True)
                     logger.info(f"register auth check in next 60s")
                     QtCore.QTimer.singleShot(60000, auth_check)
                 else:
