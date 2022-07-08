@@ -21,6 +21,7 @@ from PyQt5.QtGui import QIcon
 
 import aw_core
 from aw_client import ActivityWatchClient
+from aw_client.localToken import LocalToken
 
 from .manager import Manager, Module
 
@@ -121,15 +122,10 @@ class TrayIcon(QSystemTrayIcon):
         menu.addSeparator()
 
         # Auth
-        awc = ActivityWatchClient()
-        if awc.user_name:
-            menu.addAction(
-                f"{awc.user_name}"
-            )
-        else:
-            menu.addAction(
-                "Login", lambda: login()
-            )
+        
+        menu.addAction(
+            "Login", lambda: login()
+        )
         menu.addSeparator()
 
         exitIcon = QIcon.fromTheme(
@@ -162,12 +158,8 @@ class TrayIcon(QSystemTrayIcon):
             for action in modulesMenu.actions():
                 if action.isEnabled():
                     module: Module = action.data()
-                    if awc.user_name:
-                        alive = module.is_alive()
-                        action.setChecked(alive)
-                    else:
-                        module.stop()
-                        action.setChecked(False)
+                    alive = module.is_alive()
+                    action.setChecked(alive)
                     # print(module.text(), alive)
 
         QtCore.QTimer.singleShot(2000, rebuild_modules_menu)
@@ -185,32 +177,39 @@ class TrayIcon(QSystemTrayIcon):
         QtCore.QTimer.singleShot(2000, check_module_status)
 
         def auth_check() -> None:
-            user = awc.auth()
-            if user is not None and user != {}:
-                awc.user_name = user['name']
-                awc.user_email = user['email']
-                for action in menu.actions():
-                    if action.text() == "Login":
-                        action.setText(awc.user_name)
-
-                QtCore.QTimer.singleShot(60000, auth_check)
-            else:
-                if awc.user_name:
+            logger.info("begin auth check")
+            awc = ActivityWatchClient()
+            if awc.localToken.get() is not None and awc.localToken.get() != "":
+                logger.info(f"local token found: {awc.localToken.get()}")
+                if awc.is_authenticated:
+                    logger.info(f"user: {awc.user_name} - {awc.user_email}")
+                    for action in menu.actions():
+                        if action.text() == "Login":
+                            action.setText(awc.user_name)
+                            
                     for action in modulesMenu.actions():
-                        if action.isEnabled():
+                        if not action.isChecked():
                             module: Module = action.data()
-                            module.stop()
+                            if module is not None:
+                                module.start(testing=self.testing)
+                                action.setChecked(True)
+                    logger.info(f"register auth check in next 60s")
+                    QtCore.QTimer.singleShot(60000, auth_check)
+                else:
+                    awc.localToken.delete()
                     QMessageBox.critical(
                         None,
-                        "Auth",
-                        "Your account has been logged into another computer!",
+                        "Komutracker",
+                        "Please re-lauch the application and login again!",
                     )
                     sys.exit(1)
-                else:
-                    QtCore.QTimer.singleShot(10000, auth_check)
-
-        QtCore.QTimer.singleShot(10000, auth_check)
-
+            else:
+                logger.info(f"No local token found, getting token from server ...")
+                awc.get_device_token()
+                QtCore.QTimer.singleShot(5000, auth_check)
+                
+        auth_check()
+    
     def _build_modulemenu(self, moduleMenu: QMenu) -> None:
         moduleMenu.clear()
 
@@ -275,7 +274,7 @@ def run(manager: Manager, testing: bool = False) -> Any:
     if sys.platform == "darwin":
         icon = QIcon(":/black-monochrome-logo.png")
         # Allow macOS to use filters for changing the icon's color
-        icon.setIsMask(True)
+        # icon.setIsMask(True)
     else:
         icon = QIcon(":/logo.png")
 
@@ -289,7 +288,7 @@ def run(manager: Manager, testing: bool = False) -> Any:
     return app.exec_()
 
 def login() -> Any:
-    authUrl = "https://identity.nccsoft.vn/auth/realms/NCC/protocol/openid-connect/auth"
+    authUrl = "https://identity.nccsoft.vn/auth/realms/ncc/protocol/openid-connect/auth"
     clientId = "komutracker"
     state = f"{socket.gethostname()}"
     open_url(f"{authUrl}?client_id={clientId}&response_type=code&state={state}")

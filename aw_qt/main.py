@@ -2,6 +2,7 @@ import sys
 import logging
 import subprocess
 import platform
+from aw_client.client import ActivityWatchClient
 import click
 from typing import Optional
 
@@ -42,7 +43,9 @@ def main(testing: bool, autostart_modules: Optional[str]) -> None:
     )
 
     _manager = Manager(testing=testing)
-    _manager.autostart(_autostart_modules)
+    awc = ActivityWatchClient()
+    if awc.is_authenticated:
+        _manager.autostart(_autostart_modules)
 
     error_code = trayicon.run(_manager, testing=testing)
     _manager.stop_all()
