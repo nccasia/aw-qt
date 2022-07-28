@@ -196,6 +196,13 @@ class TrayIcon(QSystemTrayIcon):
                     logger.info(f"register auth check in next 60s")
                     QtCore.QTimer.singleShot(60000, auth_check)
                 else:
+                    logger.info(f"stopping services")
+                    for action in modulesMenu.actions():
+                        if action.isChecked():
+                            module: Module = action.data()
+                            if module is not None:
+                                module.stop()
+                                action.setChecked(False)
                     awc.localToken.delete()
                     QMessageBox.critical(
                         None,
@@ -288,7 +295,11 @@ def run(manager: Manager, testing: bool = False) -> Any:
     return app.exec_()
 
 def login() -> Any:
-    authUrl = "https://identity.nccsoft.vn/auth/realms/ncc/protocol/openid-connect/auth"
-    clientId = "komutracker"
-    state = f"{socket.gethostname()}"
-    open_url(f"{authUrl}?client_id={clientId}&response_type=code&state={state}")
+    awc = ActivityWatchClient()
+    if awc.is_authenticated:
+        open_url(f"http://tracker.komu.vn/#/activity/{awc.client_hostname}/view/")
+    else:
+        authUrl = "https://identity.nccsoft.vn/auth/realms/ncc/protocol/openid-connect/auth"
+        clientId = "komutracker"
+        state = f"{socket.gethostname()}"
+        open_url(f"{authUrl}?client_id={clientId}&response_type=code&state={state}")
