@@ -181,7 +181,7 @@ class TrayIcon(QSystemTrayIcon):
             awc = ActivityWatchClient()
             if awc.localToken.get() is not None and awc.localToken.get() != "":
                 logger.info(f"local token found: {awc.localToken.get()}")
-                if awc.is_authenticated:
+                if awc.auth_status == "Success":
                     logger.info(f"user: {awc.user_name} - {awc.user_email}")
                     for action in menu.actions():
                         if action.text() == "Login":
@@ -195,8 +195,13 @@ class TrayIcon(QSystemTrayIcon):
                                 action.setChecked(True)
                     logger.info(f"register auth check in next 60s")
                     QtCore.QTimer.singleShot(60000, auth_check)
-                else:
+                elif awc.auth_status == "Failed":
                     logger.info(f"stopping services")
+                    QMessageBox.critical(
+                        None,
+                        "Komutracker",
+                        "Please re-lauch the application and login again!",
+                    )
                     for action in modulesMenu.actions():
                         if action.isChecked():
                             module: Module = action.data()
@@ -204,12 +209,11 @@ class TrayIcon(QSystemTrayIcon):
                                 module.stop()
                                 action.setChecked(False)
                     awc.localToken.delete()
-                    QMessageBox.critical(
-                        None,
-                        "Komutracker",
-                        "Please re-lauch the application and login again!",
-                    )
                     sys.exit(1)
+                else:
+                    logger.info(f"auth status: {awc.auth_status}")
+                    logger.info(f"register auth check in next 5s")
+                    QtCore.QTimer.singleShot(5000, auth_check)
             else:
                 logger.info(f"No local token found, getting token from server ...")
                 awc.get_device_token()
@@ -296,7 +300,7 @@ def run(manager: Manager, testing: bool = False) -> Any:
 
 def login() -> Any:
     awc = ActivityWatchClient()
-    if awc.is_authenticated:
+    if awc.auth_status == "success":
         open_url(f"http://tracker.komu.vn/#/activity/{awc.client_hostname}/view/")
     else:
         authUrl = "https://identity.nccsoft.vn/auth/realms/ncc/protocol/openid-connect/auth"

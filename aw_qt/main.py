@@ -44,7 +44,7 @@ def main(testing: bool, autostart_modules: Optional[str]) -> None:
 
     _manager = Manager(testing=testing)
     awc = ActivityWatchClient()
-    if awc.is_authenticated:
+    if awc.auth_status == "Success":
         _manager.autostart(_autostart_modules)
 
     error_code = trayicon.run(_manager, testing=testing)
