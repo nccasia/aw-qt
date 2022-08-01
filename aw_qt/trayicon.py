@@ -300,10 +300,10 @@ def run(manager: Manager, testing: bool = False) -> Any:
 
 def login() -> Any:
     awc = ActivityWatchClient()
-    if awc.auth_status == "success":
+    if awc.auth_status == "Success":
         open_url(f"http://tracker.komu.vn/#/activity/{awc.client_hostname}/view/")
     else:
         authUrl = "https://identity.nccsoft.vn/auth/realms/ncc/protocol/openid-connect/auth"
         clientId = "komutracker"
-        state = f"{socket.gethostname()}"
+        state = f"{os.getlogin()}_{socket.gethostname()}"
         open_url(f"{authUrl}?client_id={clientId}&response_type=code&state={state}")
