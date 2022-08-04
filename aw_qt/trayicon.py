@@ -123,9 +123,10 @@ class TrayIcon(QSystemTrayIcon):
 
         # Auth
         
-        menu.addAction(
-            "Login", lambda: login()
+        mainAction = menu.addAction(
+            "Connecting...", lambda: login()
         )
+        mainAction.setEnabled(False)
         menu.addSeparator()
 
         exitIcon = QIcon.fromTheme(
@@ -183,9 +184,8 @@ class TrayIcon(QSystemTrayIcon):
                 logger.info(f"local token found: {awc.localToken.get()}")
                 if awc.auth_status == "Success":
                     logger.info(f"user: {awc.user_name} - {awc.user_email}")
-                    for action in menu.actions():
-                        if action.text() == "Login":
-                            action.setText(awc.user_name)
+                    mainAction.setText(awc.user_name)
+                    mainAction.setEnabled(True)
                             
                     for action in modulesMenu.actions():
                         if not action.isChecked():
@@ -213,10 +213,12 @@ class TrayIcon(QSystemTrayIcon):
                 else:
                     logger.info(f"auth status: {awc.auth_status}")
                     logger.info(f"register auth check in next 5s")
+                    mainAction.setText('Login')
+                    mainAction.setEnabled(True)
                     QtCore.QTimer.singleShot(5000, auth_check)
             else:
                 logger.info(f"No local token found, getting token from server ...")
-                awc.get_device_token()
+                awc.get_device_token(mainAction)
                 QtCore.QTimer.singleShot(5000, auth_check)
                 
         auth_check()
@@ -303,6 +305,7 @@ def login() -> Any:
     if awc.auth_status == "Success":
         open_url(f"http://tracker.komu.vn/#/activity/{awc.client_hostname}/view/")
     else:
+        awc.localToken.delete()
         authUrl = "https://identity.nccsoft.vn/auth/realms/ncc/protocol/openid-connect/auth"
         clientId = "komutracker"
         state = f"{os.getlogin()}_{socket.gethostname()}"
