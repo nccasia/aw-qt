@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import (
     QMenu,
     QWidget,
     QPushButton,
+    QAction
 )
 from PyQt5.QtGui import QIcon
 
@@ -124,7 +125,7 @@ class TrayIcon(QSystemTrayIcon):
         # Auth
         
         mainAction = menu.addAction(
-            "Connecting...", lambda: login()
+            "Connecting...", lambda: login(mainAction)
         )
         mainAction.setEnabled(False)
         menu.addSeparator()
@@ -214,6 +215,7 @@ class TrayIcon(QSystemTrayIcon):
                     logger.info(f"auth status: {awc.auth_status}")
                     logger.info(f"register auth check in next 5s")
                     mainAction.setText('Login')
+                    awc.localToken.delete()
                     mainAction.setEnabled(True)
                     QtCore.QTimer.singleShot(5000, auth_check)
             else:
@@ -300,7 +302,7 @@ def run(manager: Manager, testing: bool = False) -> Any:
     # Run the application, blocks until quit
     return app.exec_()
 
-def login() -> Any:
+def login(mainAction: QAction) -> Any:
     awc = ActivityWatchClient()
     if awc.auth_status == "Success":
         open_url(f"http://tracker.komu.vn/#/activity/{awc.client_hostname}/view/")
@@ -308,5 +310,7 @@ def login() -> Any:
         awc.localToken.delete()
         authUrl = "https://identity.nccsoft.vn/auth/realms/ncc/protocol/openid-connect/auth"
         clientId = "komutracker"
+        mainAction.setText('Authenticating...')
+        mainAction.setEnabled(False)
         state = f"{os.getlogin()}_{socket.gethostname()}"
         open_url(f"{authUrl}?client_id={clientId}&response_type=code&state={state}")
