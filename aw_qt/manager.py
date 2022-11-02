@@ -291,6 +291,6 @@ if __name__ == "__main__":
     manager = Manager()
     for module in manager.modules:
         module.start(testing=True)
-        sleep(2)
+        sleep(10)
         assert module.is_alive()
         module.stop()
