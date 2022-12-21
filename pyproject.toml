@@ -18,6 +18,7 @@ aw-core = "^0.5"
 PyQt5 = "5.15.6"
 pyobjc-framework-Cocoa = { version = "*", platform = "darwin" }
 click = "^7.1.2"
+pytz = "^2022.6"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"

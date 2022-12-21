@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import socket
 import sys
 import logging
@@ -7,7 +8,7 @@ import subprocess
 from collections import defaultdict
 from typing import Any, DefaultDict, List, Optional, Dict
 import webbrowser
-
+import pytz
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (
     QApplication,
@@ -85,13 +86,15 @@ class TrayIcon(QSystemTrayIcon):
         testing: bool = False,
     ) -> None:
         QSystemTrayIcon.__init__(self, icon, parent)
-        self._parent = parent  # QSystemTrayIcon also tries to save parent info but it screws up the type info
+        # QSystemTrayIcon also tries to save parent info but it screws up the type info
+        self._parent = parent
         self.setToolTip("KomuTracker" + (" (testing)" if testing else ""))
 
         self.manager = manager
         self.testing = testing
-
-        self.root_url = "http://tracker.komu.vn:{port}".format(port=5666 if self.testing else 80)
+        self.awc = None
+        self.root_url = "http://10.10.51.35:{port}".format(
+            port=27180 if self.testing else 80)
         self.activated.connect(self.on_activated)
 
         self._build_rootmenu()
@@ -116,14 +119,14 @@ class TrayIcon(QSystemTrayIcon):
         modulesMenu = menu.addMenu("Modules")
         self._build_modulemenu(modulesMenu)
 
-        #menu.addSeparator()
+        # menu.addSeparator()
         menu.addAction(
             "Open log folder", lambda: open_dir(aw_core.dirs.get_log_dir(None))
         )
         menu.addSeparator()
 
         # Auth
-        
+
         mainAction = menu.addAction(
             "Connecting...", lambda: login(mainAction)
         )
@@ -137,7 +140,8 @@ class TrayIcon(QSystemTrayIcon):
         # Seems to be in agreement with: https://github.com/OtterBrowser/otter-browser/issues/1313
         #   "it seems that the bug is also triggered when creating a QIcon with an invalid path"
         if exitIcon.availableSizes():
-            menu.addAction(exitIcon, "Quit KomuTracker", lambda: exit(self.manager))
+            menu.addAction(exitIcon, "Quit KomuTracker",
+                           lambda: exit(self.manager))
         else:
             menu.addAction("Quit KomuTracker", lambda: exit(self.manager))
 
@@ -178,6 +182,38 @@ class TrayIcon(QSystemTrayIcon):
 
         QtCore.QTimer.singleShot(2000, check_module_status)
 
+        def check_afk_watcher_status(milli=10*60*1_000) -> None:
+            bucket_id = f"aw-watcher-afk_{self.awc.client_hostname}"
+            current_time = datetime.now(timezone.utc).replace(
+                tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Saigon'))
+            # current_time = datetime.now()
+            # Get all events from start of day (7AM)
+            start_date_time = current_time.replace(
+                hour=7, minute=0, second=0, microsecond=0)
+            events = self.awc.get_events(
+                bucket_id=bucket_id, limit=1, start=start_date_time, end=current_time)
+            start_time = current_time - timedelta(milliseconds=milli)
+            afk_watcher_working = False
+            for event in events:
+                event_start = event['timestamp']
+                event_end = event_start + event['duration']
+                if start_time < event_end:
+                    afk_watcher_working = True
+                # if
+            logger.info(
+                f"Checking afk_watcher status from {start_date_time} - {current_time}")
+            logger.info(events)
+            if not afk_watcher_working:
+                logger.info("afk_watcher not working as intended")
+                self.showMessage("KomuTracker not working as intended",
+                                 f"Komutracker server didn't receive your afk event for the last {milli/(60*1000)} minutes\nCheck your log and restart/contact admin",
+                                 icon=QSystemTrayIcon.Warning,
+                                 msecs=5000)
+            else:
+                logger.info("afk_watcher working as intended")
+            QtCore.QTimer.singleShot(milli, check_afk_watcher_status)
+        QtCore.QTimer.singleShot(10*60*1000, check_afk_watcher_status)
+
         def auth_check() -> None:
             logger.info("begin auth check")
             awc = ActivityWatchClient()
@@ -187,7 +223,7 @@ class TrayIcon(QSystemTrayIcon):
                     logger.info(f"user: {awc.user_name} - {awc.user_email}")
                     mainAction.setText(awc.user_name)
                     mainAction.setEnabled(True)
-                            
+                    self.awc = awc
                     for action in modulesMenu.actions():
                         if not action.isChecked():
                             module: Module = action.data()
@@ -219,18 +255,20 @@ class TrayIcon(QSystemTrayIcon):
                     mainAction.setEnabled(True)
                     QtCore.QTimer.singleShot(5000, auth_check)
             else:
-                logger.info(f"No local token found, getting token from server ...")
+                logger.info(
+                    f"No local token found, getting token from server ...")
                 awc.get_device_token(mainAction)
                 QtCore.QTimer.singleShot(5000, auth_check)
-                
+
         auth_check()
-    
+
     def _build_modulemenu(self, moduleMenu: QMenu) -> None:
         moduleMenu.clear()
 
         def add_module_menuitem(module: Module) -> None:
             title = module.name
-            ac = moduleMenu.addAction(title, lambda: module.toggle(self.testing))
+            ac = moduleMenu.addAction(
+                title, lambda: module.toggle(self.testing))
 
             ac.setData(module)
             ac.setCheckable(True)
@@ -302,10 +340,12 @@ def run(manager: Manager, testing: bool = False) -> Any:
     # Run the application, blocks until quit
     return app.exec_()
 
+
 def login(mainAction: QAction) -> Any:
     awc = ActivityWatchClient()
     if awc.auth_status == "Success":
-        open_url(f"http://tracker.komu.vn/#/activity/{awc.client_hostname}/view/")
+        open_url(
+            f"http://tracker.komu.vn/#/activity/{awc.client_hostname}/view/")
     else:
         awc.localToken.delete()
         authUrl = "https://identity.nccsoft.vn/auth/realms/ncc/protocol/openid-connect/auth"
@@ -313,4 +353,5 @@ def login(mainAction: QAction) -> Any:
         mainAction.setText('Authenticating...')
         mainAction.setEnabled(False)
         state = f"{os.getlogin()}_{socket.gethostname()}"
-        open_url(f"{authUrl}?client_id={clientId}&response_type=code&state={state}")
+        open_url(
+            f"{authUrl}?client_id={clientId}&response_type=code&state={state}")
