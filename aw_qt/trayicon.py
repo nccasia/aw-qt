@@ -182,37 +182,37 @@ class TrayIcon(QSystemTrayIcon):
 
         QtCore.QTimer.singleShot(2000, check_module_status)
 
-        def check_afk_watcher_status(milli=10*60*1_000) -> None:
-            bucket_id = f"aw-watcher-afk_{self.awc.client_hostname}"
-            current_time = datetime.now(timezone.utc).replace(
-                tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Saigon'))
-            # current_time = datetime.now()
-            # Get all events from start of day (7AM)
-            start_date_time = current_time.replace(
-                hour=7, minute=0, second=0, microsecond=0)
-            events = self.awc.get_events(
-                bucket_id=bucket_id, limit=1, start=start_date_time, end=current_time)
-            start_time = current_time - timedelta(milliseconds=milli)
-            afk_watcher_working = False
-            for event in events:
-                event_start = event['timestamp']
-                event_end = event_start + event['duration']
-                if start_time < event_end:
-                    afk_watcher_working = True
-                # if
-            logger.info(
-                f"Checking afk_watcher status from {start_date_time} - {current_time}")
-            logger.info(events)
-            if not afk_watcher_working:
-                logger.info("afk_watcher not working as intended")
-                self.showMessage("KomuTracker not working as intended",
-                                 f"Komutracker server didn't receive your afk event for the last {milli/(60*1000)} minutes\nCheck your log and restart/contact admin",
-                                 icon=QSystemTrayIcon.Warning,
-                                 msecs=5000)
-            else:
-                logger.info("afk_watcher working as intended")
-            QtCore.QTimer.singleShot(milli, check_afk_watcher_status)
-        QtCore.QTimer.singleShot(10*60*1000, check_afk_watcher_status)
+        # def check_afk_watcher_status(milli=10*60*1_000) -> None:
+        #     bucket_id = f"aw-watcher-afk_{self.awc.client_hostname}"
+        #     current_time = datetime.now(timezone.utc).replace(
+        #         tzinfo=pytz.utc).astimezone(pytz.timezone('Asia/Saigon'))
+        #     # current_time = datetime.now()
+        #     # Get all events from start of day (7AM)
+        #     start_date_time = current_time.replace(
+        #         hour=7, minute=0, second=0, microsecond=0)
+        #     events = self.awc.get_events(
+        #         bucket_id=bucket_id, limit=1, start=start_date_time, end=current_time)
+        #     start_time = current_time - timedelta(milliseconds=milli)
+        #     afk_watcher_working = False
+        #     for event in events:
+        #         event_start = event['timestamp']
+        #         event_end = event_start + event['duration']
+        #         if start_time < event_end:
+        #             afk_watcher_working = True
+        #         # if
+        #     logger.info(
+        #         f"Checking afk_watcher status from {start_date_time} - {current_time}")
+        #     logger.info(events)
+        #     if not afk_watcher_working:
+        #         logger.info("afk_watcher not working as intended")
+        #         self.showMessage("KomuTracker not working as intended",
+        #                          f"Komutracker server didn't receive your afk event for the last {milli/(60*1000)} minutes\nCheck your log and restart/contact admin",
+        #                          icon=QSystemTrayIcon.Warning,
+        #                          msecs=5000)
+        #     else:
+        #         logger.info("afk_watcher working as intended")
+        #     QtCore.QTimer.singleShot(milli, check_afk_watcher_status)
+        # QtCore.QTimer.singleShot(10*60*1000, check_afk_watcher_status)
 
         def auth_check() -> None:
             logger.info("begin auth check")
