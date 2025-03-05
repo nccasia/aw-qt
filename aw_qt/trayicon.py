@@ -22,9 +22,11 @@ from PyQt5.QtGui import QIcon
 
 import aw_core
 from aw_client import ActivityWatchClient
+import urllib.parse
 from aw_client.localToken import LocalToken
 
 from .manager import Manager, Module
+from .config import AwQtSettings
 
 logger = logging.getLogger(__name__)
 
@@ -308,9 +310,12 @@ def login(mainAction: QAction) -> Any:
         open_url(f"http://tracker.komu.vn/#/activity/{awc.client_hostname}/view/")
     else:
         awc.localToken.delete()
-        authUrl = "https://identity.nccsoft.vn/auth/realms/ncc/protocol/openid-connect/auth"
-        clientId = "komutracker"
         mainAction.setText('Authenticating...')
         mainAction.setEnabled(False)
+
+        config = AwQtSettings(testing=False)
+        authUrl = config.oauth2_auth_url
+        clientId = config.oauth2_client_id
+        redirect_url = urllib.parse.quote(config.oauth2_redirect_uri)
         state = f"{os.getlogin()}_{socket.gethostname()}"
-        open_url(f"{authUrl}?client_id={clientId}&response_type=code&state={state}")
+        open_url(f"{authUrl}/oauth2/auth?client_id={clientId}&redirect_uri={redirect_url}&response_type=code&scope=openid+offline&state={state}")
