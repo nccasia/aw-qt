@@ -9,6 +9,7 @@ autostart_modules = ["aw-watcher-afk", "aw-watcher-window"]
 oauth2_auth_url = "https://oauth2.mezon.ai"
 oauth2_client_id = "1840672452439445504"
 oauth2_redirect_uri = "https://tracker-api.komu.vn/api/0/auth/callback"
+application_domain = "tracker.komu.vn"
 
 [aw-qt-testing]
 autostart_modules = ["aw-watcher-afk", "aw-watcher-window"]
@@ -28,3 +29,4 @@ class AwQtSettings:
         self.oauth2_auth_url = config_section["oauth2_auth_url"]
         self.oauth2_client_id = config_section["oauth2_client_id"]
         self.oauth2_redirect_uri = config_section["oauth2_redirect_uri"]
+        self.application_domain = config_section["application_domain"]

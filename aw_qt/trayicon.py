@@ -28,8 +28,9 @@ from aw_client.localToken import LocalToken
 from .manager import Manager, Module
 from .config import AwQtSettings
 
+config = AwQtSettings(testing=False)
 logger = logging.getLogger(__name__)
-
+application_domain = config.application_domain
 
 def get_env() -> Dict[str, str]:
     """
@@ -93,7 +94,7 @@ class TrayIcon(QSystemTrayIcon):
         self.manager = manager
         self.testing = testing
 
-        self.root_url = "http://tracker.komu.vn:{port}".format(port=5666 if self.testing else 80)
+        self.root_url = "http://{app_url}:{port}".format(app_url=application_domain, port=5666 if self.testing else 80)
         self.activated.connect(self.on_activated)
 
         self._build_rootmenu()
@@ -307,13 +308,12 @@ def run(manager: Manager, testing: bool = False) -> Any:
 def login(mainAction: QAction) -> Any:
     awc = ActivityWatchClient()
     if awc.auth_status == "Success":
-        open_url(f"http://tracker.komu.vn/#/activity/{awc.client_hostname}/view/")
+        open_url(f"http://{application_domain}/#/activity/{awc.client_hostname}/view/")
     else:
         awc.localToken.delete()
         mainAction.setText('Authenticating...')
         mainAction.setEnabled(False)
 
-        config = AwQtSettings(testing=False)
         authUrl = config.oauth2_auth_url
         clientId = config.oauth2_client_id
         redirect_url = urllib.parse.quote(config.oauth2_redirect_uri)
