@@ -8,8 +8,8 @@ default_config = """
 autostart_modules = ["aw-watcher-afk", "aw-watcher-window"]
 oauth2_auth_url = "https://oauth2.mezon.ai"
 oauth2_client_id = "1840672452439445504"
-oauth2_redirect_uri = "https://tracker-api.komu.vn/api/0/auth/callback"
-application_domain = "tracker.komu.vn"
+oauth2_redirect_uri = "https://tracker-api.nccsoft.vn/api/0/auth/callback"
+application_domain = "tracker.nccsoft.vn"
 
 [aw-qt-testing]
 autostart_modules = ["aw-watcher-afk", "aw-watcher-window"]
