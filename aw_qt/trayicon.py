@@ -128,9 +128,13 @@ class TrayIcon(QSystemTrayIcon):
         # Auth
         
         mainAction = menu.addAction(
-            "Connecting...", lambda: login(mainAction)
+            "Connecting...", lambda: login(mainAction, logoutAction)
         )
         mainAction.setEnabled(False)
+        logoutAction = menu.addAction(
+            "Logout", lambda: logout(mainAction, logoutAction)
+        )
+        logoutAction.setEnabled(False)
         menu.addSeparator()
 
         exitIcon = QIcon.fromTheme(
@@ -190,6 +194,7 @@ class TrayIcon(QSystemTrayIcon):
                     logger.info(f"user: {awc.user_name} - {awc.user_email}")
                     mainAction.setText(awc.user_name)
                     mainAction.setEnabled(True)
+                    logoutAction.setEnabled(True)
                             
                     for action in modulesMenu.actions():
                         if not action.isChecked():
@@ -220,10 +225,11 @@ class TrayIcon(QSystemTrayIcon):
                     mainAction.setText('Login')
                     awc.localToken.delete()
                     mainAction.setEnabled(True)
+                    logoutAction.setEnabled(False)
                     QtCore.QTimer.singleShot(5000, auth_check)
             else:
                 logger.info(f"No local token found, getting token from server ...")
-                awc.get_device_token(mainAction)
+                awc.get_device_token(mainAction, logoutAction)
                 QtCore.QTimer.singleShot(5000, auth_check)
                 
         auth_check()
@@ -305,7 +311,7 @@ def run(manager: Manager, testing: bool = False) -> Any:
     # Run the application, blocks until quit
     return app.exec_()
 
-def login(mainAction: QAction) -> Any:
+def login(mainAction: QAction, logoutAction: QAction) -> Any:
     awc = ActivityWatchClient()
     if awc.auth_status == "Success":
         open_url(f"http://{application_domain}/#/activity/{awc.client_hostname}/view/")
@@ -313,9 +319,14 @@ def login(mainAction: QAction) -> Any:
         awc.localToken.delete()
         mainAction.setText('Authenticating...')
         mainAction.setEnabled(False)
+        logoutAction.setEnabled(False)
 
         authUrl = config.oauth2_auth_url
         clientId = config.oauth2_client_id
         redirect_url = urllib.parse.quote(config.oauth2_redirect_uri)
         state = f"{os.getlogin()}_{socket.gethostname()}"
         open_url(f"{authUrl}/oauth2/auth?client_id={clientId}&redirect_uri={redirect_url}&response_type=code&scope=openid+offline&state={state}")
+
+def logout(mainAction: QAction, logoutAction: QAction) -> Any:
+    awc = ActivityWatchClient()
+    awc.delete_device_token(mainAction, logoutAction)
